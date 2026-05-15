@@ -605,13 +605,24 @@ static const struct dma_buf_ops amdxdna_dmabuf_ops = {
 	.vunmap = drm_gem_dmabuf_vunmap,
 };
 
+static struct dma_buf *amdxdna_gem_dev_bo_export(struct drm_gem_object *gobj, int flags)
+{
+	struct amdxdna_dev *xdna = to_xdna_dev(gobj->dev);
+
+	XDNA_ERR(xdna, "Exporting device BO is not supported.");
+        return ERR_PTR(-EOPNOTSUPP);
+}
+
 static struct dma_buf *amdxdna_gem_prime_export(struct drm_gem_object *gobj, int flags)
 {
+	struct amdxdna_dev *xdna = to_xdna_dev(gobj->dev);
 	struct amdxdna_gem_obj *abo = to_xdna_obj(gobj);
 	DEFINE_DMA_BUF_EXPORT_INFO(exp_info);
 
-	if (abo->pri)
+	if (abo->pri) {
+		 XDNA_ERR(xdna, "BO is not exportable");
 		return ERR_PTR(-EOPNOTSUPP);
+	}
 
 	if (abo->dma_buf) {
 		get_dma_buf(abo->dma_buf);
@@ -838,6 +849,7 @@ static int amdxdna_gem_dev_obj_vmap(struct drm_gem_object *obj, struct iosys_map
 static const struct drm_gem_object_funcs amdxdna_gem_dev_obj_funcs = {
 	.free = amdxdna_gem_dev_obj_free,
 	.vmap = amdxdna_gem_dev_obj_vmap,
+	.export = amdxdna_gem_dev_bo_export,
 };
 
 static const struct drm_gem_object_funcs amdxdna_gem_shmem_funcs = {
